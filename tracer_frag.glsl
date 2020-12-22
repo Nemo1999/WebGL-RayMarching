@@ -8,6 +8,12 @@ varying vec3 initialRay;
 uniform float textureWeight;
 uniform sampler2D texture;
 
+uniform float val1;
+uniform float val2;
+uniform float val3;
+uniform float val4;
+uniform float val5;
+
 //light position
 uniform vec3 lightPos;
 uniform float lightSize;
@@ -65,7 +71,7 @@ vec3 cosineWeightedDirection(float seed, vec3 normal){
 }
 
 float DistanceToObject(vec3 pos){
-  return(length(pos - vec3(5.0,0.0,-5.0))-3.0);
+  return(length(pos - vec3(val1/20.0 - 2.5,val2/20.0 - 2.5,-10.0))-3.0);
 }
 
 

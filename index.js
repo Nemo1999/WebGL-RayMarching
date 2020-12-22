@@ -3,6 +3,26 @@ gameState.startTime = new Date() ;
 var sceneData = new Object;
 var tracerProgram;
 var renderProgram;
+var sliders = [];
+var sliderValues = [];
+
+
+for(let i=0;i<5;i++){
+    sliders.push(document.getElementById("slider"+(i+1).toString()));
+    sliderValues.push(document.getElementById("val"+(i+1).toString()));
+    sliderValues[i].innerHTML = sliders[i].value;
+    gameState["val"+(i+1).toString()] = parseFloat(sliders[i].value);
+    (sliders[i]).oninput = function() {
+        (sliderValues[i]).innerHTML = this.value;
+        gameState["val"+(i+1).toString()] = parseFloat(this.value);
+        sceneData.frameCount = 0;
+    }
+    console.log(sliders[i].oninput, sliderValues[i].innerHTML);
+}
+
+
+
+
 Main();
 
 async function Main(){
