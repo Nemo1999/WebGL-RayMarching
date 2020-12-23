@@ -20,7 +20,7 @@ for(let i=0;i<5;i++){
     console.log(sliders[i].oninput, sliderValues[i].innerHTML);
 }
 
-setInterval(()=>{sceneData.frameCount = 0;},20);
+setInterval(()=>{sceneData.frameCount = 0;},100);
 
 
 Main();

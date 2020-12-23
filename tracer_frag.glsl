@@ -1,6 +1,7 @@
 // start of fragment shader
 #define numSphere 10
 #define maxDepth 6
+#define neg(s) (s<0.0)?s:0.0
 precision highp float;
 uniform vec3 eyePos;
 varying vec3 initialRay;
@@ -90,10 +91,45 @@ float SDTorus(vec3 pos, float r1, float r2){
   return length(q)-r2;
 }
 
-float DistanceToObject(vec3 pos){
-  vec3 repeat = fract(pos) - 0.5;
-  return SDTorus(rotate(repeat,vec3(0.5,0.5,0.5),timeSinceStart/10.0),0.3,0.05);
+
+float SDTetrahedron(vec3 pos){
+
+  //assuming edge size = 2.0
+  float halfHeight = sqrt(11.0/12.0); // the height of the tetrahedron (this is height between two opposite edges, not between vertex and edge)
+  
+  //vertices of the tetrahedron
+  vec3 p11 = vec3(1.0,0.0,halfHeight);
+  vec3 p12 = vec3(-1.0,0.0,halfHeight);
+  vec3 p21 = vec3(0.0,1.0,-halfHeight);  
+  vec3 p22 = vec3(0.0,-1.0,-halfHeight);
+  // normal corresponding to each vertex (normal of the surface on the opposite side of the vertex )
+  vec3 n11 = normalize(vec3(-0.3333,0.0,-halfHeight/3.0)- p11);
+  vec3 n12 = normalize(vec3(0.3333,0.0,-halfHeight/3.0) - p12);
+  vec3 n21 = normalize(vec3(0.0,-0.3333,halfHeight/3.0) - p21);
+  vec3 n22 = normalize(vec3(0.0,0.3333,halfHeight/3.0) - p22);
+
+  vec3 r1 = pos - p11;
+  vec3 r2 = pos - p22;
+  
+  vec4 ds = vec4(dot(r1,n22),dot(r1,n21),dot(r2,n12),dot(r2,n11));// distances to each surface
+
+  float d = 1e+9;
+  float outer_dist = max(ds.x,max(ds.y,max(ds.z,max(ds.w,0.0))));
+  d = min(outer_dist,d);
+  vec4 ds_neg = (ds - abs(ds) / 2.0); //negative part of ds
+  float inner_dist = max(ds_neg.x,max(ds_neg.y,max(ds_neg.z,ds_neg.w)));
+  if(d <= 0.0 ){d = inner_dist;}
+  return d;
 }
+
+float DistanceToObject(vec3 pos){
+  vec3 repeat = fract(pos)-0.5;
+  vec3 p = rotate(repeat,vec3(1.0,0.0,0.0),val1/10.0-5.0);
+  p = rotate(p,vec3(.0,1.0,0.0),val2/10.0-5.0 + timeSinceStart / 50.0);
+  p = rotate(p,vec3(.0,0.0,1.0),val3/10.0- 5.0 - timeSinceStart / 50.0);
+  return SDTetrahedron(5.0 * p)/5.0;
+}
+
 
 
 vec3 findBackGround(vec3 origin, vec3 dir){
@@ -103,7 +139,7 @@ vec3 findBackGround(vec3 origin, vec3 dir){
 
 //find pixel color iteratively
 vec3 findColor(vec3  origin,vec3 dir ){
-  float maxD = 45.0;
+  float maxD = 50.0;
   vec2 uv = ((gl_FragCoord.xy/vec2(1000.0,700.0)) - 0.5) * 2.0;
   // ----------------------------- Ray march the scene ------------------------------
 	float dist = 1.0;
@@ -153,12 +189,12 @@ vec3 findColor(vec3  origin,vec3 dir ){
     //diffuse
     vec3 sunDir = normalize(vec3(9.93, 9.0, 19.5));
     float diffuse = dot(sunDir, normal);
-    vec3 lightColor = vec3(0.6)* vec3(diffuse);
+    vec3 lightColor = vec3(0.8)* vec3(diffuse);
     // a red and blue light coming from different directions
     lightColor += (vec3(1.0, 0.2, 0.4) * saturate(normal.x *0.5+0.5))*pow(ambientAvg, 0.35);
     lightColor += (vec3(0.1, 0.5, 0.99) * saturate(-normal.y *0.5+0.5))*pow(ambientAvg, 0.35);
     // blue glow light coming from the glow in the middle
-    //lightColor += vec3(0.3, 0.5, 0.9) * saturate(dot(-pos, normal))*pow(ambientS, 0.3);
+    lightColor += vec3(0.3, 0.5, 0.9) * saturate(dot(-pos, normal))*pow(ambientS, 0.3);
     if(t<45.0)
       return lightColor;
     else
