@@ -253,7 +253,7 @@ vec3 findColor(vec3  origin,vec3 dir ){
     // blue glow light coming from the glow in the middle
     lightColor += vec3(0.3, 0.5, 0.9) * saturate(dot(-pos, normal))*pow(ambientS, 0.3);
     if(t<45.0)
-      return lightColor;
+      if(val5>=50.0){return lightColor;}else{return normal;}
     else
       return findBackGround(origin,dir);
 }
