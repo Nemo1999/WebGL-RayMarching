@@ -129,7 +129,7 @@ float SDTetrahedron(vec3 pos){
   return d;
 }
 
-float DE(vec3 pos)
+float FractalTetrohedron(vec3 pos)
 {
     vec3 z = pos;
     float Scale = 2.0;
@@ -144,6 +144,24 @@ float DE(vec3 pos)
        z = z*Scale + Offset*(1.0-Scale);
     }
     return (length(z)-5.1) * pow(Scale, -float(Iterations));
+}
+
+float FractalWithRotation(vec3 pos)
+{
+    vec3 p = pos;
+    float Scale = 2.0;
+    vec3 Offset = vec3(50.0/20.0);
+    
+    const int Iterations = 13;
+    for(int n=0;n < Iterations;n++) {
+      p = rotate(p,vec3(1.,0.,1.),val4/10.0-5.0);
+       if(p.x+p.y<0.0) p.xy = -p.yx; // fold 1
+       if(p.x+p.z<0.0) p.zx = -p.xz; // fold 2
+       if(p.y+p.z<0.0) p.yz = -p.zy; // fold 3	
+       p = rotate(p,vec3(1.,1.,0.),val5/10.0-5.0);
+       p = p*Scale + Offset*(1.0-Scale);
+    }
+    return (length(p)-5.1) * pow(Scale, -float(Iterations));
 }
 
 float DistanceToObject(vec3 pos){
@@ -181,7 +199,7 @@ float DistanceToObject(vec3 pos){
   p = rotate(p,vec3(1.0,0.0,0.0),val1/10.0-5.0);
   p = rotate(p,vec3(.0,1.0,0.0),val2/10.0-5.0 );
   p = rotate(p,vec3(.0,0.0,1.0),val3/10.0-5.0 );
-  return DE(p);
+  return FractalWithRotation(p);
 }
 
 
@@ -199,7 +217,7 @@ vec3 findColor(vec3  origin,vec3 dir ){
   // ----------------------------- Ray march the scene ------------------------------
 	float dist = 1.0;
 	//float t = 0.1;
-  float t = 0.001 + Hash2d(uv)*0.1;	// random dither-fade things close to the camera
+  float t = 0.001 + Hash2d(uv)*0.001;	// random dither-fade things close to the camera
    
 	vec3 pos;
   float smallVal = 50.0/ 100000.0;
@@ -245,8 +263,9 @@ vec3 findColor(vec3  origin,vec3 dir ){
     float ambientAvg = (ambient*3.0 + ambientS) * 0.25;
     //diffuse
     vec3 sunDir = normalize(vec3(90.93, 90.0, 90.5));
-    float diffuse = dot(sunDir, normal);
-    vec3 lightColor = vec3(0.5)* vec3(diffuse);
+    float specular = pow(max(dot((sunDir + (-dir))/2.0 , normal),0.0),5.0); 
+    float diffuse = max(dot(sunDir, normal),0.0);
+    vec3 lightColor = vec3(0.4)* vec3(diffuse)+specular;
     // a red and blue light coming from different directions
     lightColor += (vec3(0.9, 0.2, 0.4) * saturate(normal.x *0.5+0.5))*pow(ambientAvg, 0.35);
     lightColor += (vec3(0.1, 0.5, 0.99) * saturate(-normal.y *0.5+0.5))*pow(ambientAvg, 0.35);
