@@ -116,38 +116,93 @@ float SDTetrahedron(vec3 pos){
   float d = 1e+9;
   float outer_dist = max(ds.x,max(ds.y,max(ds.z,max(ds.w,0.0))));
   d = min(outer_dist,d);
-  vec4 ds_neg = (ds - abs(ds) / 2.0); //negative part of ds
-  float inner_dist = max(ds_neg.x,max(ds_neg.y,max(ds_neg.z,ds_neg.w)));
+  
+  float inner_dist = -1e9;
+  for(int i=0;i<4;i++){
+    if(ds[i] >= 0.0);
+    else{
+      if(ds[i] > inner_dist)
+        inner_dist = ds[i];
+    }
+  }
   if(d <= 0.0 ){d = inner_dist;}
   return d;
 }
 
+float DE(vec3 pos)
+{
+    vec3 z = pos;
+    float Scale = 2.0;
+    vec3 Offset = vec3(val4/20.0);
+    float r;
+    
+    const int Iterations = 13;
+    for(int n=0;n < Iterations;n++) {
+       if(z.x+z.y<0.0) z.xy = -z.yx; // fold 1
+       if(z.x+z.z<0.0) z.zx = -z.xz; // fold 2
+       if(z.y+z.z<0.0) z.yz = -z.zy; // fold 3	
+       z = z*Scale + Offset*(1.0-Scale);
+    }
+    return (length(z)-5.1) * pow(Scale, -float(Iterations));
+}
+
 float DistanceToObject(vec3 pos){
-  vec3 repeat = fract(pos)-0.5;
-  vec3 p = rotate(repeat,vec3(1.0,0.0,0.0),val1/10.0-5.0);
-  p = rotate(p,vec3(.0,1.0,0.0),val2/10.0-5.0 + timeSinceStart / 50.0);
-  p = rotate(p,vec3(.0,0.0,1.0),val3/10.0- 5.0 - timeSinceStart / 50.0);
-  return SDTetrahedron(5.0 * p)/5.0;
+  //scale  experiment 
+  /*
+  float unscale = 1.0; 
+  vec3 repeat = fract(pos/5.0)-0.5; 
+  //repeat.z = pos.z;
+  unscale *= 5.0;
+  float scale = val4/100.;
+  vec3 p = scale * repeat + vec3(0.,0.,0.)*(1.-scale);
+  unscale /= scale;
+  //p = p + vec3(0.,0.,1.0);
+  p = rotate(p,vec3(1.0,0.0,0.0),val1/10.0-5.0);
+  p = rotate(p,vec3(.0,1.0,0.0),val2/10.0-5.0 );
+  p = rotate(p,vec3(.0,0.0,1.0),val3/10.0-5.0 );
+
+  return unscale * SDTorus(p,0.2,0.01);
+  */
+
+
+
+  //example using intersection and complement 
+  /*
+  float scale = 4.0;
+  float d = SDTetrahedron(scale * p)/scale;
+  vec3 p_flip = vec3(p.xy,-p.z);
+  float d_flip = SDTetrahedron(scale* p_flip) / scale;
+  scale = scale / 2.0;
+  return max(d,-d_flip);
+  */
+
+  
+  vec3 p = pos + vec3(0.,0.,0.0);
+  p = rotate(p,vec3(1.0,0.0,0.0),val1/10.0-5.0);
+  p = rotate(p,vec3(.0,1.0,0.0),val2/10.0-5.0 );
+  p = rotate(p,vec3(.0,0.0,1.0),val3/10.0-5.0 );
+  return DE(p);
 }
 
 
 
 vec3 findBackGround(vec3 origin, vec3 dir){
-  return mix(vec3(1.0,1.0,1.0),vec3(0.5,0.7,1.0),(dir.y+1.0)*0.5);
+  return 0.3*mix(vec3(1.0,1.0,1.0),vec3(0.5,0.7,1.0),(dir.y+1.0)*0.5);
 }
 
 
 //find pixel color iteratively
 vec3 findColor(vec3  origin,vec3 dir ){
+  // farthest distance rays will travel
   float maxD = 50.0;
   vec2 uv = ((gl_FragCoord.xy/vec2(1000.0,700.0)) - 0.5) * 2.0;
   // ----------------------------- Ray march the scene ------------------------------
 	float dist = 1.0;
-	float t = 0.1;
-  //float t = 0.1 + Hash2d(uv)*0.1;	// random dither-fade things close to the camera
-   // farthest distance rays will travel
+	//float t = 0.1;
+  float t = 0.001 + Hash2d(uv)*0.1;	// random dither-fade things close to the camera
+   
 	vec3 pos;
-  float smallVal = 0.000625;
+  float smallVal = 50.0/ 100000.0;
 	// ray marching time
     for (int i = 0; i < 210; i++)	// This is the count of the max times the ray actually marches.
     {
@@ -169,10 +224,12 @@ vec3 findColor(vec3  origin,vec3 dir ){
         if ((t > maxD) || (abs(dist) < smallVal)) break;
     }
 
+    float dist_minus = dist + smallVal ;
+    vec3 pos_minus = pos - smallVal * normalize(dir);
     vec3 smallVec = vec3(smallVal, 0, 0);
-    vec3 normalU = vec3(dist - DistanceToObject(pos - smallVec.xyy),
-                       dist - DistanceToObject(pos - smallVec.yxy),
-                       dist - DistanceToObject(pos - smallVec.yyx));
+    vec3 normalU = vec3(dist_minus - DistanceToObject(pos_minus - smallVec.xyy),
+                        dist_minus - DistanceToObject(pos_minus - smallVec.yxy),
+                        dist_minus - DistanceToObject(pos_minus - smallVec.yyx));
     vec3 normal = normalize(normalU);
 
     // calculate 2 ambient occlusion values. One for global stuff and one
@@ -187,11 +244,11 @@ vec3 findColor(vec3  origin,vec3 dir ){
     ambient = saturate(ambient);
     float ambientAvg = (ambient*3.0 + ambientS) * 0.25;
     //diffuse
-    vec3 sunDir = normalize(vec3(9.93, 9.0, 19.5));
+    vec3 sunDir = normalize(vec3(90.93, 90.0, 90.5));
     float diffuse = dot(sunDir, normal);
-    vec3 lightColor = vec3(0.8)* vec3(diffuse);
+    vec3 lightColor = vec3(0.5)* vec3(diffuse);
     // a red and blue light coming from different directions
-    lightColor += (vec3(1.0, 0.2, 0.4) * saturate(normal.x *0.5+0.5))*pow(ambientAvg, 0.35);
+    lightColor += (vec3(0.9, 0.2, 0.4) * saturate(normal.x *0.5+0.5))*pow(ambientAvg, 0.35);
     lightColor += (vec3(0.1, 0.5, 0.99) * saturate(-normal.y *0.5+0.5))*pow(ambientAvg, 0.35);
     // blue glow light coming from the glow in the middle
     lightColor += vec3(0.3, 0.5, 0.9) * saturate(dot(-pos, normal))*pow(ambientS, 0.3);
@@ -204,7 +261,7 @@ vec3 findColor(vec3  origin,vec3 dir ){
 void main(){
 
   
-  vec3 initialRayBlur = initialRay + 0.001 * randomUnitDirection(timeSinceStart); 
+  vec3 initialRayBlur = initialRay + 5.0/10000.0 * randomUnitDirection(timeSinceStart); 
   vec3 textureData = texture2D(texture, gl_FragCoord.xy / vec2(1000,700)).rgb;
   gl_FragColor = vec4(mix(findColor(eyePos, initialRayBlur), textureData, textureWeight), 1.0);
 }
