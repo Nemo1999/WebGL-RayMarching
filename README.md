@@ -11,3 +11,5 @@ A fractal demo based on ray-marching
 
 
 ![](triangle.png)
+
+![](sponge.png)
