@@ -1,12 +1,106 @@
-var gameState = new Object;
+const gameState = new Object;
 gameState.startTime = new Date() ;
-var sceneData = new Object;
+const sceneData = new Object;
 var tracerProgram;
 var renderProgram;
+var tracer_fragment_sources;
 var sliders = [];
 var sliderValues = [];
+var recompile = function(){;}
+const Settings = new Object;
+
+initSettings(Settings);
+function initSettings(s){
+    if(s.example == null){
+        //first time init
+        
+        s.AtomSize = 5.0;
+        s.Iterations = 5;
+        
+        s.Rotate1 = 0.0;
+        s.Rotate2 = 0.0;
+        s.Rotate3 = 0.0;
+        
+        s.Scale = 0.0;
+        
+        s.Offset1 = 1.0;
+        s.Offset2 = 1.0;
+        s.Offset3 = 1.0;
+        
+        s.example = "Tetrahedron";
+        initSettings(s);
+    }
+    else if(s.example == "Square"){
+        const t1 = new Object;
+        t1.type='reflect_square';
+        
+        const t2 = new Object;
+        t2.type='reflect_tetra_2';
+        
+        const t3 = new Object;        
+        t3.type='custom';
+        t3.source = 'p.z-=0.5*Offset.z*(Scale-1.0)/Scale;p.z=-abs(-p.z);p.z+=0.5*Offset.z*(Scale-1.0)/Scale;';
+        
+        const t4 = new Object;
+        t4.type='custom';
+        t4.source = 'p.x=Scale*p.x-Offset.x*(Scale-1.0);p.y=Scale*p.y-Offset.y*(Scale-1.0);';
+        
+
+        const t5 = new Object;
+        t5.type='custom';
+        t5.source = 'p.z=Scale*p.z;';
+
+        s.transforms=[t1, t2, t3, t4, t5];
+        
+    }
+    else if(s.example == "Tetrahedron"){
+        const t1 = new Object;
+        t1.type='reflect_tetra_1';
+        
+        const t2 = new Object;
+        t2.type='scale';
+        
+        const t3 = new Object;        
+        t3.type='custom';
+        t3.source='';
+
+        const t4 = new Object;
+        t4.type='custom';
+        t4.source='';
+
+        const t5 = new Object;
+        t5.type='custom';
+        t5.source='';
+        
+        s.transforms=[t1, t2, t3, t4, t5];
+    }
+    else{
+        console.log("error: unknown setting.example");
+    }
+}
 
 
+
+//QuickSettings.useExtStyleSheet();
+var fs = QuickSettings.create(0, 200, "Transform Settings");
+fs.addDropDown("examples",["Tetrahedron","Square"],(p)=>{Settings.example=p.value;initSettings(Settings);refreshTransPanels(Settings.transroms);});
+fs.addRange("Atom Size",0.0,10.0,5.0,0.1,(p)=>{Settings.AtomSize=p.value;SceneData.frameCount = 0;});
+fs.addRange("Iterations",0,20,5,1,(p)=>{console.log(p);Settings.Iterations=p;recompile();});
+
+function addTransformControl(s,index,){
+    
+}
+
+
+var gs = QuickSettings.create(0,400, "Global Settings");
+for(let i=0;i<3;i++)
+    gs.addRange("Rotate"+(i+1).toString(), 0 , 2*Math.PI ,0.0, 0.01 ,(p)=>{console.log(p)});
+gs.addRange("Scale",0,100,50,0.1,(p)=>{console.log(p)});
+for(let i=0;i<3;i++)
+    gs.addRange("Offest"+(i+1).toString(), 0.0 , 5.0 , 1.0 , 0.01 ,(p)=>{console.log(p)});
+
+
+/*
 for(let i=0;i<5;i++){
     sliders.push(document.getElementById("slider"+(i+1).toString()));
     sliderValues.push(document.getElementById("val"+(i+1).toString()));
@@ -19,6 +113,8 @@ for(let i=0;i<5;i++){
     }
     console.log(sliders[i].oninput, sliderValues[i].innerHTML);
 }
+*/
+
 
 //setInterval(()=>{sceneData.frameCount = 0;},200);
 
@@ -33,7 +129,6 @@ async function Main(){
     var fetch_render_frag = fetch("render_frag.glsl").then(r => r.text());
 
 
-
     //get canvas, attach mouse event handelers
     const canvas = getCanvas();
     //get WebGL context
@@ -45,9 +140,25 @@ async function Main(){
     var renderVertexSource = await fetch_render_vert;
     var renderFragSource = await   fetch_render_frag;
 
+    tracer_fragment_sources = tracerFragSource.split('$$$');
+    //console.log(tracer_fragment_source);
+
+    recompile = function(){
+        var  FragSource = '';
+        FragSource += tracer_fragment_sources[0];
+        FragSource += '\n';
+        FragSource += makeSDF(Settings);
+        FragSource += tracer_fragment_sources[1];
+        console.log(FragSource);
+        tracerProgram = initShaderProgram(gl,tracerVertexSource,FragSource);
+        sceneData.frameCount = 0;
+
+    }
 
     // compile and link shader source
-    tracerProgram = initShaderProgram(gl, tracerVertexSource, tracerFragSource);
+    initSettings(Settings);
+    recompile();
+    //tracerProgram = initShaderProgram(gl, tracerVertexSource, tracerFragSource);
     renderProgram = initShaderProgram(gl, renderVertexSource, renderFragSource);
 
     //creat framebuffer and  textures
@@ -58,14 +169,14 @@ async function Main(){
     const fpsElem = document.querySelector("#fps");
     let then = 0;
     function updateAndRender(now) {
-	now *= 0.001;                          // convert to seconds
-	const deltaTime = now - then;          // compute time since last frame
-	then = now;                            // remember time for next frame
-	const fps = 1 / deltaTime;             // compute frames per second
-	fpsElem.textContent = fps.toFixed(1);  // update fps display
-	update(gl,tracerProgram, gameState, sceneData);
-	render(gl,renderProgram, sceneData);
-	requestAnimationFrame(updateAndRender);
+	    now *= 0.001;                          // convert to seconds
+	    const deltaTime = now - then;          // compute time since last frame
+	    then = now;                            // remember time for next frame
+	    const fps = 1 / deltaTime;             // compute frames per second
+	    fpsElem.textContent = fps.toFixed(1);  // update fps display
+	    update(gl,tracerProgram, gameState, sceneData);
+	    render(gl,renderProgram, sceneData);
+	    requestAnimationFrame(updateAndRender);
     }
     requestAnimationFrame(updateAndRender);
     //setInterval(()=>{update(gl,tracerProgram, gameState, sceneData); render(gl, renderProgram, sceneData); }, deltaT);
@@ -137,35 +248,6 @@ function initGameState(gameState){
     gameState.eyeCenter = vec3.fromValues(0.0,0.0,-1.0);
     gameState.currentEyeCenter = vec3.fromValues(0.0,0.0,-1.0);
     gameState.eyeUp = vec3.fromValues(0.0,1.0,0.0);
-
-    gameState.lightPos = vec3.fromValues(20.0,20.0,20.0);
-    gameState.lightSize = 0.2;
-
-    //set sphere position and radius
-    gameState.sphereCenterRadius = [0.0,-100.0,-10.0,100.0,
-				    0.0,0.9,-5.0,1.0,
-				    0.5,0.2,-2.0,0.5,
-				    -3.0,0.6,-6.0,0.7,
-				    -0.1,-0.25,-1.7,0.1,
-				    -1.7,0.15,-4.7,0.3,
-				    -0.6,0.10,-4.0,0.3,
-				    0.1,-0.27,-1.5,0.1,
-				    -0.7, -0.15, -1.5,0.2,
-				    1.5,  0.04, -3.0,0.3];
-
-    //set sphere color
-    gameState.sphereColor = [0.2,0.3,0.2,
-			     0.7,0.3,0.3,
-			     1.0,1.0,1.0,
-			     1.0,1.0,1.0,
-			     0.5,0.5,0.5,
-			     0.4,0.4,0.4,
-			     0.3,0.6,0.7,
-			     0.3,0.3,0.7,//purple
-			     0.7,0.4,0.2,
-			     0.5,0.7,0.3];
-
-    gameState.sphereMaterial = [Number.NEGATIVE_INFINITY, 0.0 , -2.3, -2.3,0.0,0.0, 0.0 ,Number.NEGATIVE_INFINITY, 0.05 , 0.5 ];
 
 }
 

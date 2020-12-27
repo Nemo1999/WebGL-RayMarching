@@ -9,6 +9,9 @@ varying vec3 initialRay;
 uniform float textureWeight;
 uniform sampler2D texture;
 
+uniform float Scale;
+uniform vec3 Offset;
+
 uniform float val1;
 uniform float val2;
 uniform float val3;
@@ -16,8 +19,6 @@ uniform float val4;
 uniform float val5;
 
 //light position
-uniform vec3 lightPos;
-uniform float lightSize;
 uniform float timeSinceStart;
 const float pi = 3.1415926535897932384626433836795028841971;
 const float inf = 1000000000000000.0;
@@ -70,136 +71,16 @@ vec3 randomUnitDirection(float seed){
   return vec3(cos(phi)*cos(theta), cos(phi)*sin(theta), sin(phi));
 }
 
-// return a random direction whose probability distribution is propotional to dot(x, normal); 
-// normal should have length 1
-vec3 cosineWeightedDirection(float seed, vec3 normal){
-  return normalize(normal + randomUnitDirection(seed));
-}
 
-float SDSphere(vec3 pos, float radius){
-  return(length(pos - vec3(0.0,0.0,0.0))-radius);
-}
+//insert DistanceToObject Definition here $$$
 
-float SDRectangle(vec3 pos, vec3 size, float r){
-  vec3 q = abs(pos - vec3(0.0,0.0,0.0))- size; 
-  return length(max(q,0.0)) + min((max(q.x,max(q.y,q.z))),0.0) -r;
-}
-
-float SDTorus(vec3 pos, float r1, float r2){
-  vec2 q = vec2(length(pos.xy)-r1,pos.z);
-  vec3 p = 2.0 * vec3(normalize(pos.xy),0.0);
-  return length(q)-r2;
-}
-
-
-float SDTetrahedron(vec3 pos){
-
-  //assuming edge size = 2.0
-  float halfHeight = sqrt(11.0/12.0); // the height of the tetrahedron (this is height between two opposite edges, not between vertex and edge)
-  
-  //vertices of the tetrahedron
-  vec3 p11 = vec3(1.0,0.0,halfHeight);
-  vec3 p12 = vec3(-1.0,0.0,halfHeight);
-  vec3 p21 = vec3(0.0,1.0,-halfHeight);  
-  vec3 p22 = vec3(0.0,-1.0,-halfHeight);
-  // normal corresponding to each vertex (normal of the surface on the opposite side of the vertex )
-  vec3 n11 = normalize(vec3(-0.3333,0.0,-halfHeight/3.0)- p11);
-  vec3 n12 = normalize(vec3(0.3333,0.0,-halfHeight/3.0) - p12);
-  vec3 n21 = normalize(vec3(0.0,-0.3333,halfHeight/3.0) - p21);
-  vec3 n22 = normalize(vec3(0.0,0.3333,halfHeight/3.0) - p22);
-
-  vec3 r1 = pos - p11;
-  vec3 r2 = pos - p22;
-  
-  vec4 ds = vec4(dot(r1,n22),dot(r1,n21),dot(r2,n12),dot(r2,n11));// distances to each surface
-
-  float d = 1e+9;
-  float outer_dist = max(ds.x,max(ds.y,max(ds.z,max(ds.w,0.0))));
-  d = min(outer_dist,d);
-  
-  float inner_dist = -1e9;
-  for(int i=0;i<4;i++){
-    if(ds[i] >= 0.0);
-    else{
-      if(ds[i] > inner_dist)
-        inner_dist = ds[i];
-    }
-  }
-  if(d <= 0.0 ){d = inner_dist;}
-  return d;
-}
-
-float FractalTetrohedron(vec3 pos)
-{
-    vec3 z = pos;
-    float Scale = 2.0;
-    vec3 Offset = vec3(val4/20.0);
-    float r;
-    
-    const int Iterations = 13;
-    for(int n=0;n < Iterations;n++) {
-       if(z.x+z.y<0.0) z.xy = -z.yx; // fold 1
-       if(z.x+z.z<0.0) z.zx = -z.xz; // fold 2
-       if(z.y+z.z<0.0) z.yz = -z.zy; // fold 3	
-       z = z*Scale + Offset*(1.0-Scale);
-    }
-    return (length(z)-5.1) * pow(Scale, -float(Iterations));
-}
-
-float FractalWithRotation(vec3 pos)
-{
-    vec3 p = pos;
-    float Scale = 2.0;
-    vec3 Offset = vec3(50.0/20.0);
-    
-    const int Iterations = 13;
-    for(int n=0;n < Iterations;n++) {
-      p = rotate(p,vec3(1.,0.,1.),val4/10.0-5.0);
-       if(p.x+p.y<0.0) p.xy = -p.yx; // fold 1
-       if(p.x+p.z<0.0) p.zx = -p.xz; // fold 2
-       if(p.y+p.z<0.0) p.yz = -p.zy; // fold 3	
-       p = rotate(p,vec3(1.,1.,0.),val5/10.0-5.0);
-       p = p*Scale + Offset*(1.0-Scale);
-    }
-    return (length(p)-5.1) * pow(Scale, -float(Iterations));
-}
 
 float DistanceToObject(vec3 pos){
-  //scale  experiment 
-  /*
-  float unscale = 1.0; 
-  vec3 repeat = fract(pos/5.0)-0.5; 
-  //repeat.z = pos.z;
-  unscale *= 5.0;
-  float scale = val4/100.;
-  vec3 p = scale * repeat + vec3(0.,0.,0.)*(1.-scale);
-  unscale /= scale;
-  //p = p + vec3(0.,0.,1.0);
-  p = rotate(p,vec3(1.0,0.0,0.0),val1/10.0-5.0);
-  p = rotate(p,vec3(.0,1.0,0.0),val2/10.0-5.0 );
-  p = rotate(p,vec3(.0,0.0,1.0),val3/10.0-5.0 );
-
-  return unscale * SDTorus(p,0.2,0.01);
-  */
-
-
-
-  //example using intersection and complement 
-  /*
-  float scale = 4.0;
-  float d = SDTetrahedron(scale * p)/scale;
-  vec3 p_flip = vec3(p.xy,-p.z);
-  float d_flip = SDTetrahedron(scale* p_flip) / scale;
-  scale = scale / 2.0;
-  return max(d,-d_flip);
-  */
-
-  
   vec3 p = pos + vec3(0.,0.,0.0);
   p = rotate(p,vec3(1.0,0.0,0.0),val1/10.0-5.0);
   p = rotate(p,vec3(.0,1.0,0.0),val2/10.0-5.0 );
   p = rotate(p,vec3(.0,0.0,1.0),val3/10.0-5.0 );
-  return FractalWithRotation(p);
+  return SDF(p);
 }
 
 
