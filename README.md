@@ -7,4 +7,7 @@ A fractal demo based on ray-marching
 
 - [inigo quilez's website](https://www.iquilezles.org/www/index.htm) provides valuable guides about ray-marching.
 
+-Current WebGL setting is highly inpired by [evan's path-tracing example](http://madebyevan.com/webgl-path-tracing/)
+
+
 ![](triangle.png)
