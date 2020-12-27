@@ -34,7 +34,14 @@ function initSettings(s){
     }
     else if(s.example == "Square"){
         s.Scale = 3.0;
+        s.AtomSize = 5.0;
         s.Iterations = 7.0;
+        s.Offset[0] = 1.0;
+        s.Offset[1] = 1.0;
+        s.Offset[2] = 1.0;
+        s.Rotate1 = 0.0;
+        s.Rotate2 = 0.0;
+        s.Rotate3 = 0.0;
         const t1 = new Object;
         t1.type='reflect_square';
 
@@ -59,7 +66,15 @@ function initSettings(s){
             t.axis = vec3.create();
     }
     else if(s.example == "Tetrahedron"){
-        
+        s.Scale = 2.0;
+        s.AtomSize = 5.0;
+        s.Iterations = 13.0;
+        s.Offset[0] = 2.0;
+        s.Offset[1] = 2.0;
+        s.Offset[2] = 2.0;
+        s.Rotate1 = 0.0;
+        s.Rotate2 = 0.0;
+        s.Rotate3 = -0.78;
         const t1 = new Object;
         t1.type='reflect_tetra_1';
         
@@ -67,15 +82,15 @@ function initSettings(s){
         t2.type='scale';
         
         const t3 = new Object;        
-        t3.type='custom';
+        t3.type='empty';
         t3.source='';
 
         const t4 = new Object;
-        t4.type='custom';
+        t4.type='empty';
         t4.source='';
 
         const t5 = new Object;
-        t5.type='custom';
+        t5.type='empty';
         t5.source='';
         
         s.transforms=[t1, t2, t3, t4, t5];
@@ -125,7 +140,7 @@ function createTransformSettings(){
     for(let i=0;i<5;i++){
         ts.push(QuickSettings.create(1400,80+i*127, "Transform-"+(i+1).toString()));
         function initPanel(s,t){//setting and transform data
-            s.addDropDown("type",["translate","rotate","scale","reflect_tetra_1","reflect_tetra_2","reflect_square","reflect_octa","custom"],(p)=>{
+            s.addDropDown("type",["translate","rotate","scale","reflect_tetra_1","reflect_tetra_2","reflect_square","reflect_octa","custom","empty"],(p)=>{
                 t.type = p.value;
                 updateTransPanel(s,t);
             });
@@ -139,11 +154,11 @@ function createTransformSettings(){
                 recompile();
             });
             s.addTextArea("source code","",(p)=>{
-                if(p.search(";")!=-1){
-                    t.source = p;
-                    recompile();
-                }
+                t.source = p;
             });
+            s.addButton("compile",(p)=>{
+                recompile();
+            })
         }
         initPanel(ts[i],Settings.transforms[i]);
     }
@@ -180,6 +195,7 @@ function updateTransPanel(s,t){
     else if(t.type == 'custom'){
         s.showControl('source code');
         s.showTitle('source code');
+        s.showControl('compile');
     }
 }
 
@@ -197,7 +213,7 @@ function refreshPanels(){
 
 function setTransPanel(s,t){
     updateTransPanel(s,t);
-    const type_options = ["translate","rotate","scale","reflect_tetra_1","reflect_tetra_2","reflect_square","reflect_octa","custom"];
+    const type_options = ["translate","rotate","scale","reflect_tetra_1","reflect_tetra_2","reflect_square","reflect_octa","custom","empty"];
     s.setValue('type',type_options.indexOf(t.type));
     if(t.type =='translate'){
         for(let i=0;i<3;i++)
@@ -340,7 +356,7 @@ function initSceneData(gl, sceneData){
 }
 
 function initGameState(gameState){
-    gameState.eyePos = vec3.fromValues(0.0,0.0,-3.0);
+    gameState.eyePos = vec3.fromValues(0.0,0.0,-4.0);
     gameState.eyeCenter = vec3.fromValues(0.0,0.0,-1.0);
     gameState.currentEyeCenter = vec3.fromValues(0.0,0.0,-1.0);
     gameState.eyeUp = vec3.fromValues(0.0,1.0,0.0);
