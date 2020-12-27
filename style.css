@@ -17,7 +17,8 @@ body, html {
     flex-grow: 1;
     float: left;
     background-color: white;
-    height: 70%;
+    height: 100%;
+    margin-left: 6%;
 }
 .rightpane {
     flex-grow: 1;
