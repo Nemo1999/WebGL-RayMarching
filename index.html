@@ -12,7 +12,7 @@
     <script type="text/javascript" src="index.js" defer></script>
     
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="quicksettings_tiny_black.css">
+    <link rel="stylesheet" href="quicksettings.css">
   </head>
   <body>
     
@@ -21,55 +21,13 @@
       
       
       <div class="leftpane">
-	<ul>
-    <li>
-      <p  style="font-size:20px">Settings : </p>
-      <div id="settings">
-      <p>
-        Option1: 
-        <input type="range" min="0.0" max="100" value="50" class="slider" id="slider1">
-        <span id="val1"></span>
-      </p>
-      <p>
-        Option2: 
-        <input type="range" min="0.0" max="100" value="50" class="slider" id="slider2">
-        <span id="val2"></span>
-      </p>
-      <p>
-        Option3: 
-        <input type="range" min="0.0" max="100" value="50" class="slider" id="slider3">
-        <span id="val3"></span>
-      </p>
-      <p>
-        Option4: 
-        <input type="range" min="0.0" max="100" value="50" class="slider" id="slider4">
-        <span id="val4"></span>
-      </p>
-      <p>
-        Option5: 
-        <input type="range" min="0.0" max="100" value="50" class="slider" id="slider5">
-        <span id="val5"></span>
-      </p>
-      </div>
-    </li>
-	</ul>
-	
-	
+        <h1>WebGL RayMarching DEMO (fps: <span id="fps"></span>)</h1>
+	      <canvas id="glCanvas" width="1000" height="700"></canvas>
       </div>
       <div class="middlepane">
-	      <h1>WebGL RayMarching DEMO</h1>
-	      <canvas id="glCanvas" width="1000" height="700"></canvas>
-        <p  style="font-size:20px">Current webgl setting is highly Inspired by this <a style="font-size:20px" href="http://madebyevan.com/webgl-path-tracing/">work of evan</a> </p>
-        <p  style="font-size:20px">Introduction of raymarching can be found  <a style="font-size:20px" href="https://iquilezles.org/www/articles/distfunctions/distfunctions.htm">here</a> </p>
-      
+	      
       </div>
       <div class="rightpane">
-        <ul>
-          <div>fps: <span id="fps"></span></div>
-          <li><p  style="font-size:20px">The scene is computed continuously, it becomes smooth over time</p></li>
-          <li><p  style="font-size:20px">Drag mouse to change perspective </p></li>
-          <li><p  style="font-size:20px">Scroll mouse to move camera </p></li>
-        </ul>
 
       </div>
     </div>

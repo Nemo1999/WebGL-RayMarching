@@ -10,13 +10,11 @@ uniform float textureWeight;
 uniform sampler2D texture;
 
 uniform float Scale;
+uniform float Rotate1;
+uniform float Rotate2;
+uniform float Rotate3;
+uniform float AtomSize;
 uniform vec3 Offset;
-
-uniform float val1;
-uniform float val2;
-uniform float val3;
-uniform float val4;
-uniform float val5;
 
 //light position
 uniform float timeSinceStart;
@@ -77,9 +75,9 @@ vec3 randomUnitDirection(float seed){
 
 float DistanceToObject(vec3 pos){
   vec3 p = pos + vec3(0.,0.,0.0);
-  p = rotate(p,vec3(1.0,0.0,0.0),val1/10.0-5.0);
-  p = rotate(p,vec3(.0,1.0,0.0),val2/10.0-5.0 );
-  p = rotate(p,vec3(.0,0.0,1.0),val3/10.0-5.0 );
+  p = rotate(p,vec3(1.0,0.0,0.0),Rotate1);
+  p = rotate(p,vec3(.0,1.0,0.0),Rotate2);
+  p = rotate(p,vec3(.0,0.0,1.0),Rotate3);
   return SDF(p);
 }
 
@@ -153,7 +151,7 @@ vec3 findColor(vec3  origin,vec3 dir ){
     // blue glow light coming from the glow in the middle
     lightColor += vec3(0.3, 0.5, 0.9) * saturate(dot(-pos, normal))*pow(ambientS, 0.3);
     if(t<45.0)
-      if(val5>=50.0){return lightColor;}else{return normal;}
+      if(60.0>=50.0){return lightColor;}else{return normal;}
     else
       return findBackGround(origin,dir);
 }

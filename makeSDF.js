@@ -1,5 +1,4 @@
 function makeSDF(data){
-    console.log(data.AtomSize.toFixed(2).toString());
     //Offset and Scale should be passed as uniform
     const functionHead = 
         'float SDF(vec3 pos){\n'+
@@ -9,7 +8,7 @@ function makeSDF(data){
         'for(int n=0;n<Iterations;n++){\n';
     const functionTail = 
         '}\n'+
-        'return (length(p)-' + str(data.AtomSize) + ') * pow(Scale, float(rescale));\n'+
+        'return (length(p)- AtomSize) * pow(Scale, -float(rescale));\n'+
         '}\n';
     
     var ans = '';
@@ -18,7 +17,9 @@ function makeSDF(data){
         ans = ans + genTransform(data.transforms[i]);
     }
     ans += functionTail;
+    console.log(ans);
     return ans;
+    
 }
 
 
@@ -55,7 +56,7 @@ const genTransform = function(t){
         return 'p = Scale*p - Offset*(Scale-1.0);rescale+=1;\n';
     }else{ // custom
         //source should be defined
-        return t.source;
+        return '\n'+t.source+'\n';
     }
 }
 
