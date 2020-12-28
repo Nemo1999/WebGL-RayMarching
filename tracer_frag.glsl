@@ -134,9 +134,9 @@ vec3 findColor(vec3  origin,vec3 dir ){
     float ambientS = 1.0;
     ambientS *= saturate(DistanceToObject(pos + normal * 0.05)*20.0);
     ambientS *= saturate(DistanceToObject(pos + normal * 0.1)*10.0);
-    ambientS *= saturate(DistanceToObject(pos + normal * 0.2)*5.0);
-    ambientS *= saturate(DistanceToObject(pos + normal * 0.4)*2.5);
-    ambientS *= saturate(DistanceToObject(pos + normal * 0.8)*1.25);
+    ambientS *= saturate(DistanceToObject(pos + normal * 0.2)*10.0);
+    ambientS *= saturate(DistanceToObject(pos + normal * 0.4)*5.0);
+    ambientS *= saturate(DistanceToObject(pos + normal * 0.8)*2.5);
     float ambient = ambientS * saturate(DistanceToObject(pos + normal * 1.6)*1.25*0.5);
     ambient = saturate(ambient);
     float ambientAvg = (ambient*3.0 + ambientS) * 0.25;
@@ -144,7 +144,7 @@ vec3 findColor(vec3  origin,vec3 dir ){
     vec3 sunDir = normalize(vec3(90.93, 90.0, 90.5));
     float specular = pow(max(dot((sunDir + (-dir))/2.0 , normal),0.0),5.0); 
     float diffuse = max(dot(sunDir, normal),0.0);
-    vec3 lightColor = vec3(0.4)* vec3(diffuse)+specular;
+    vec3 lightColor = vec3(0.6)* vec3(diffuse)+specular;
     // a red and blue light coming from different directions
     lightColor += (vec3(0.9, 0.2, 0.4) * saturate(normal.x *0.5+0.5))*pow(ambientAvg, 0.35);
     lightColor += (vec3(0.1, 0.5, 0.99) * saturate(-normal.y *0.5+0.5))*pow(ambientAvg, 0.35);

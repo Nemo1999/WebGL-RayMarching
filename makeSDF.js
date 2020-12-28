@@ -21,8 +21,17 @@ function makeSDF(data){
     return ans;
     
 }
+/*
+this is faster ?
+const genTransform = {
+    "translate":(t) => {
+        return ccccc;
+        }
+    
+};
 
-
+genTransform[t.type](t)
+*/
 const genTransform = function(t){
     if(t.type == 'translate'){
         //t.axis should be defined
@@ -32,7 +41,7 @@ const genTransform = function(t){
         //t.axis and t.theta should be defined
         return 'p = rotate(p, ' + vec3ToString(t.axis) +', '+str(t.theta) + ');\n';
     }else if(t.type == 'reflect_tetra_1'){
-        const ans =  
+        const ans =
         'if(p.x+p.y<0.0) p.xy = -p.yx; // fold 1\n'+
         'if(p.x+p.z<0.0) p.zx = -p.xz; // fold 2\n'+
         'if(p.y+p.z<0.0) p.yz = -p.zy; // fold 3\n';
@@ -47,10 +56,10 @@ const genTransform = function(t){
         return 'p = abs(p);\n';
     }else if(t.type == 'reflect_octa'){
         const ans = 
-        'if(p.x-p.y<0)p.xy = p.yz;\n'+
-        'if(p.x+p.y<0)p.xy =-p.yx;\n'+
-        'if(p.x-p.z<0)p.xz = p.zx;\n'+
-        'if(p.x+p.z<0)p.xz =-p.zx;\n';
+        'if(p.x-p.y<0.0)p.xy = p.yx;\n'+
+        'if(p.x+p.y<0.0)p.xy =-p.yx;\n'+
+        'if(p.x-p.z<0.0)p.xz = p.zx;\n'+
+        'if(p.x+p.z<0.0)p.xz =-p.zx;\n';
         return ans;
     }else if(t.type == 'scale'){
         return 'p = Scale*p - Offset*(Scale-1.0);rescale+=1;\n';
@@ -61,7 +70,7 @@ const genTransform = function(t){
 }
 
 const vec3ToString = function(v){
-    return 'vec3('+str(v[1])+', '+str(v[2])+', '+str(v[3])+')'; 
+    return 'vec3('+str(v[0])+', '+str(v[1])+', '+str(v[2])+')'; 
 }
 
 const str = (f)=>{return f.toFixed(2).toString();}

@@ -13,6 +13,14 @@ var gs;
 
 
 function initSettings(s){
+    function newTransform(){
+        this.axis = vec3.create();
+        this.axis[0] = 1.0;
+        this.theta = 0;
+        this.source='';
+        this.type='empty';
+        return this;
+    }
     if(s.example == null){
         //first time init
         
@@ -30,9 +38,16 @@ function initSettings(s){
         s.Offset[2] = 1.0;
         
         s.example = "Tetrahedron";
+        
+        s.transforms = [];
+        for(let i=0;i<5;i++){
+            s.transforms.push(new newTransform());
+        }
         initSettings(s);
     }
     else if(s.example == "Square"){
+        gameState.eyePos = vec3.fromValues(0.,0.,-4.);
+        gameState.currentEyeCenter = vec3.fromValues(0.,0.,-1);
         s.Scale = 3.0;
         s.AtomSize = 5.0;
         s.Iterations = 7.0;
@@ -42,60 +57,101 @@ function initSettings(s){
         s.Rotate1 = 0.0;
         s.Rotate2 = 0.0;
         s.Rotate3 = 0.0;
-        const t1 = new Object;
+        const t1 = s.transforms[0];
         t1.type='reflect_square';
 
-        const t2 = new Object;
+        const t2 = s.transforms[1];
         t2.type='reflect_tetra_2';
         
-        const t3 = new Object;        
+        const t3 = s.transforms[2];      
         t3.type='custom';
         t3.source = 'p.z-=0.5*Offset.z*(Scale-1.0)/Scale;p.z=-abs(-p.z);p.z+=0.5*Offset.z*(Scale-1.0)/Scale;';
         
-        const t4 = new Object;
+        const t4 = s.transforms[3];
         t4.type='custom';
         t4.source = 'p.x=Scale*p.x-Offset.x*(Scale-1.0);\np.y=Scale*p.y-Offset.y*(Scale-1.0);';
         
 
-        const t5 = new Object;
+        const t5 = s.transforms[4];
         t5.type='custom';
         t5.source = 'p.z=Scale*p.z;\nrescale+=1;';
-
-        s.transforms=[t1, t2, t3, t4, t5];
-        for(t of s.transforms)
-            t.axis = vec3.create();
     }
     else if(s.example == "Tetrahedron"){
+        gameState.eyePos = vec3.fromValues(-3.336812973022461, -0.052767179906368256, 3.4492571353912354);
+        gameState.currentEyeCenter = vec3.fromValues(-3.971825122833252, 0.2389293909072876, 4.164570331573486);
         s.Scale = 2.0;
         s.AtomSize = 5.0;
-        s.Iterations = 13.0;
-        s.Offset[0] = 2.0;
-        s.Offset[1] = 2.0;
-        s.Offset[2] = 2.0;
-        s.Rotate1 = 0.0;
-        s.Rotate2 = 0.0;
-        s.Rotate3 = -0.78;
-        const t1 = new Object;
+        s.Iterations = 11.0;
+        s.Offset[0] = 5.0;
+        s.Offset[1] = 5.0;
+        s.Offset[2] = 5.0;
+        s.Rotate1 = 0.016;
+        s.Rotate2 = -0.78;
+        s.Rotate3 = 0.116;
+        const t1 = s.transforms[0];
         t1.type='reflect_tetra_1';
         
-        const t2 = new Object;
+        const t2 = s.transforms[1];
         t2.type='scale';
         
-        const t3 = new Object;        
-        t3.type='empty';
+        const t3 = s.transforms[2];        
+        t3.type='reflect_tetra_1';
         t3.source='';
 
-        const t4 = new Object;
-        t4.type='empty';
+        const t4 = s.transforms[3];
+        t4.type='scale';
         t4.source='';
 
-        const t5 = new Object;
+        const t5 = s.transforms[4];
         t5.type='empty';
         t5.source='';
+    }
+    else if(s.example == 'Mushroom'){
+        gameState.eyePos = vec3.fromValues(-0.0171196386218071, -0.0018011084757745266, -11.683709144592285);
+        gameState.currentEyeCenter = vec3.fromValues(0.,0.,-1);
+        Settings.Iterations = 7.0;
+        const ts = Settings.transforms;
+        Settings.Scale = 2.0;
+        Settings.Offset = vec3.fromValues(2.0,2.0,2.0);
+        ts[0].type = 'reflect_tetra_1';
+        ts[1].type = 'reflect_tetra_2';
+        ts[2].type = 'translate';
+        ts[2].axis[0] = -0.20000000298023224;
+        ts[2].axis[1] = -0.699999988079071;
+        ts[2].axis[2] = -0.3499999940395355;
+        ts[3].type='rotate';
+        ts[3].axis[0] = 1.0;
+        ts[3].axis[1] = 0.0;
+        ts[3].axis[2] = 0.8500000238418579;
+        ts[3].theta = -0.591592653589793;
+        ts[4].type = 'scale';
+    }
+    else if(s.example == 'Space Ship'){
+        //gameState.eyePos = vec3.fromValues(1.1971062421798706, 1.6426268815994263, -3.4021072387695312);
+        //gameState.currentEyeCenter = vec3.fromValues(0.9001787900924683, 1.2421846389770508, -2.5352277755737305);
+        gameState.eyePos = vec3.fromValues(0.1971062421798706, 0.1426268815994263, -4.4021072387695312);
+        gameState.currentEyeCenter = vec3.fromValues(0.0001787900924683, 0.0421846389770508, -2.5352277755737305);
+        Settings.AtomSize = 5.7;
+        Settings.Iterations = 11.0;
         
-        s.transforms=[t1, t2, t3, t4, t5];
-        for(t of s.transforms)
-            t.axis = vec3.create();
+        Settings.Scale = 2.32;
+        Settings.Offset = vec3.fromValues(1.0,1.0,1.0);
+        Settings.Rotate1 = -4.68318530717959;
+        Settings.Rotate2 =  2.51681469282041;
+        Settings.Rotate3 = -2.38318530717959;
+        const ts = Settings.transforms;
+        ts[0].type = 'reflect_tetra_1';
+        ts[1].type = 'rotate';
+        ts[1].axis[0] = 0.0;
+        ts[1].axis[1] = 0.0;
+        ts[1].axis[2] = -0.8;
+        ts[1].theta = -0.7;
+        ts[2].type = 'reflect_square';
+        
+        ts[3].type='custom';
+        ts[3].source="p.z-=0.5*Offset.z*(Scale-1.0)/Scale;p.z=-abs(-p.z);p.z+=0.5*Offset.z*(Scale-1.0)/Scale;p.x=Scale*p.x-Offset.x*(Scale-1.0);p.y=Scale*p.y-Offset.y*(Scale-1.0);";
+        ts[4].type = 'custom';
+        ts[4].source="p.z=Scale*p.z;rescale+=1;";
     }
     else{
         console.log("error: unknown setting.example");
@@ -113,7 +169,7 @@ function createSettingPanels(){
 function createFractalSettings(){
     //Fractal Setting 
     fs = QuickSettings.create(1150, 80, "Fractal Settings");
-    fs.addDropDown("examples",["Tetrahedron","Square"],(p)=>{Settings.example=p.value;initSettings(Settings);refreshPanels();});
+    fs.addDropDown("examples",["Tetrahedron","Square","Mushroom","Space Ship"],(p)=>{Settings.example=p.value;initSettings(Settings);refreshPanels();});
     fs.addRange("Atom Size",0.0,10.0,5.0,0.1,(p)=>{Settings.AtomSize=p;sceneData.frameCount = 0;});
     fs.addRange("Iterations",0,20,5,1,(p)=>{console.log(p);Settings.Iterations=p;recompile();});
     fs.addRange("Scale",1,4,2,0.01,(p)=>{Settings.Scale = p;sceneData.frameCount=0;});
@@ -137,30 +193,31 @@ function createGlobalSettings(){
 
 function createTransformSettings(){
     //transform panel create and setting     
+    function initPanel(s,i){//setting and transform data
+        s.addDropDown("type",["translate","rotate","scale","reflect_tetra_1","reflect_tetra_2","reflect_square","reflect_octa","custom","empty"],(p)=>{
+            (Settings.transforms[i]).type = p.value;
+            updateTransPanel(s,(Settings.transforms[i]));
+        });
+        for(let j=0;j<3;j++)
+            s.addRange("axis_"+(j+1).toString(),-1.0,1.0,1.0,0.05,(p)=>{
+                (Settings.transforms[i]).axis[j]=p;
+                recompile();
+                
+            });
+        s.addRange("theta",-Math.PI,Math.PI,0.0,0.01,(p)=>{
+            (Settings.transforms[i]).theta=p;
+            recompile();
+        });
+        s.addTextArea("source code","",(p)=>{
+            (Settings.transforms[i]).source = p;
+        });
+        s.addButton("compile",(p)=>{
+            recompile();
+        });
+    }
     for(let i=0;i<5;i++){
-        ts.push(QuickSettings.create(1400,80+i*127, "Transform-"+(i+1).toString()));
-        function initPanel(s,t){//setting and transform data
-            s.addDropDown("type",["translate","rotate","scale","reflect_tetra_1","reflect_tetra_2","reflect_square","reflect_octa","custom","empty"],(p)=>{
-                t.type = p.value;
-                updateTransPanel(s,t);
-            });
-            for(let j=0;j<3;j++)
-                s.addRange("axis_"+(j+1).toString(),-1.0,1.0,1.0,0.05,(p)=>{
-                    t.axis[j]=p;
-                    recompile();
-                });
-            s.addRange("theta",-Math.PI,Math.PI,0.0,0.01,(p)=>{
-                t.theta=p;
-                recompile();
-            });
-            s.addTextArea("source code","",(p)=>{
-                t.source = p;
-            });
-            s.addButton("compile",(p)=>{
-                recompile();
-            })
-        }
-        initPanel(ts[i],Settings.transforms[i]);
+        ts.push(QuickSettings.create(1400,80+i*127, "Transform-"+(i+1).toString()));   
+        initPanel(ts[i],i);
     }
 }
 
@@ -172,6 +229,7 @@ function updateTransPanel(s,t){
     s.hideControl('axis_3');
     s.hideControl('theta');
     s.hideControl('source code');
+    s.hideControl('compile');
     s.hideAllTitles();
 
     //enable needed controls
@@ -183,6 +241,8 @@ function updateTransPanel(s,t){
             s.showTitle('axis_'+(i+1).toString());
         }
             
+    }
+    else if(t.type =='scale'){
     }
     else if(t.type == 'rotate'){
         for(let i=0;i<3;i++){
@@ -197,6 +257,7 @@ function updateTransPanel(s,t){
         s.showTitle('source code');
         s.showControl('compile');
     }
+    recompile();
 }
 
 function refreshPanels(){
@@ -239,10 +300,6 @@ async function Main(){
     var fetch_render_vert = fetch("render_vert.glsl").then(r => r.text());
     var fetch_render_frag = fetch("render_frag.glsl").then(r => r.text());
 
-    initSettings(Settings);
-    createSettingPanels();
-    refreshPanels();
-
     //get canvas, attach mouse event handelers
     const canvas = getCanvas();
     //get WebGL context
@@ -255,9 +312,19 @@ async function Main(){
     var renderFragSource = await   fetch_render_frag;
 
     tracer_fragment_sources = tracerFragSource.split('$$$');
-    //console.log(tracer_fragment_source);
+
+    //creat framebuffer and  textures
+    initSceneData(gl, sceneData);
+    //define position, radius, color, material, lighting, eye, of the scene
+    initGameState(gameState);
+
+    // create fractal settings
+    initSettings(Settings);
+    createSettingPanels();
+    refreshPanels();
 
     recompile = function(){
+        console.log(Settings);
         var  FragSource = '';
         FragSource += tracer_fragment_sources[0];
         FragSource += '\n';
@@ -272,11 +339,6 @@ async function Main(){
     recompile();
     //tracerProgram = initShaderProgram(gl, tracerVertexSource, tracerFragSource);
     renderProgram = initShaderProgram(gl, renderVertexSource, renderFragSource);
-
-    //creat framebuffer and  textures
-    initSceneData(gl, sceneData);
-    //define position, radius, color, material, lighting, eye, of the scene
-    initGameState(gameState);
 
     const fpsElem = document.querySelector("#fps");
     let then = 0;
@@ -548,6 +610,7 @@ function getCanvas(){
                 // calculate the right axis for rotation
                 var rightDir = vec3.create();
                 vec3.cross(rightDir, eyeDir, gameState.eyeUp);
+                vec3.normalize(rightDir,rightDir);  
                 if(vec3.len(rightDir)==0.0) rightDir = vec3.fromValues(1.0,0.0,0.0);
                 mat4.fromRotation(udMat,dy/500, rightDir);
                 mat4.fromRotation(lrMat,dx/500, gameState.eyeUp);
