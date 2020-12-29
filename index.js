@@ -37,6 +37,7 @@ function initSettings(s){
         s.Offset[1] = 1.0;
         s.Offset[2] = 1.0;
         
+        s.Animation = false;
         s.example = "Tetrahedron";
         
         s.transforms = [];
@@ -48,6 +49,7 @@ function initSettings(s){
     else if(s.example == "Square"){
         gameState.eyePos = vec3.fromValues(0.,0.,-4.);
         gameState.currentEyeCenter = vec3.fromValues(0.,0.,-1);
+        s.Animation = false;
         s.Scale = 3.0;
         s.AtomSize = 5.0;
         s.Iterations = 7.0;
@@ -79,6 +81,7 @@ function initSettings(s){
     else if(s.example == "Tetrahedron"){
         gameState.eyePos = vec3.fromValues(-3.336812973022461, -0.052767179906368256, 3.4492571353912354);
         gameState.currentEyeCenter = vec3.fromValues(-3.971825122833252, 0.2389293909072876, 4.164570331573486);
+        s.Animation = false;
         s.Scale = 2.0;
         s.AtomSize = 5.0;
         s.Iterations = 11.0;
@@ -107,6 +110,7 @@ function initSettings(s){
         t5.source='';
     }
     else if(s.example == 'Mushroom'){
+        s.Animation = false;
         gameState.eyePos = vec3.fromValues(-0.0171196386218071, -0.0018011084757745266, -11.683709144592285);
         gameState.currentEyeCenter = vec3.fromValues(0.,0.,-1);
         Settings.Iterations = 7.0;
@@ -129,6 +133,7 @@ function initSettings(s){
     else if(s.example == 'Space Ship'){
         //gameState.eyePos = vec3.fromValues(1.1971062421798706, 1.6426268815994263, -3.4021072387695312);
         //gameState.currentEyeCenter = vec3.fromValues(0.9001787900924683, 1.2421846389770508, -2.5352277755737305);
+        s.Animation = false;
         gameState.eyePos = vec3.fromValues(0.1971062421798706, 0.1426268815994263, -4.4021072387695312);
         gameState.currentEyeCenter = vec3.fromValues(0.0001787900924683, 0.0421846389770508, -2.5352277755737305);
         Settings.AtomSize = 5.7;
@@ -153,6 +158,37 @@ function initSettings(s){
         ts[4].type = 'custom';
         ts[4].source="p.z=Scale*p.z;rescale+=1;";
     }
+    else if(s.example == 'Animation'){
+        s.Animation = true;
+        gameState.eyePos = vec3.fromValues(2.140253782272339, -2.149275779724121, -2.668018341064453);
+        gameState.currentEyeCenter = vec3.fromValues(1.605492353439331, -1.5981570482254028, -2.027472972869873);
+        s.Scale = 2.0;
+        s.AtomSize = 5.0;
+        s.Iterations = 5.0;
+        s.Offset[0] = 1.95;
+        s.Offset[1] = 1.95;
+        s.Offset[2] = 1.95;
+        s.Rotate1 = 0.0168;
+        s.Rotate2 = 0.0168;
+        s.Rotate3 = 0.0168;
+        const t1 = s.transforms[0];
+        t1.type='reflect_tetra_1';
+        
+        const t2 = s.transforms[1];
+        t2.type='scale';
+        
+        const t3 = s.transforms[2];        
+        t3.type='reflect_tetra_1';
+        t3.source='';
+
+        const t4 = s.transforms[3];
+        t4.type='scale';
+        t4.source='';
+
+        const t5 = s.transforms[4];
+        t5.type='custom';
+        t5.source='p = rotate(p,Offset,pi*(max(sin(timeSinceStart/30.0)+0.7,0.0)));';
+    }
     else{
         console.log("error: unknown setting.example");
     }
@@ -169,7 +205,7 @@ function createSettingPanels(){
 function createFractalSettings(){
     //Fractal Setting 
     fs = QuickSettings.create(1150, 80, "Fractal Settings");
-    fs.addDropDown("examples",["Tetrahedron","Square","Mushroom","Space Ship"],(p)=>{Settings.example=p.value;initSettings(Settings);refreshPanels();});
+    fs.addDropDown("examples",["Tetrahedron","Square","Mushroom","Space Ship","Animation"],(p)=>{Settings.example=p.value;initSettings(Settings);refreshPanels();});
     fs.addRange("Atom Size",0.0,10.0,5.0,0.1,(p)=>{Settings.AtomSize=p;sceneData.frameCount = 0;});
     fs.addRange("Iterations",0,20,5,1,(p)=>{console.log(p);Settings.Iterations=p;recompile();});
     fs.addRange("Scale",1,4,2,0.01,(p)=>{Settings.Scale = p;sceneData.frameCount=0;});
@@ -181,6 +217,7 @@ function createFractalSettings(){
     })
     for(let i=0;i<3;i++)
         fs.addRange("Offset_"+(i+1).toString(), 0.0 , 5.0 , 1.0 , 0.01 ,(p)=>{Settings.Offset[i]=p;sceneData.frameCount=0;});
+    fs.addBoolean('Animation',false,(p)=>{Settings.Animation=p;});
 }
 
 function createGlobalSettings(){
@@ -267,6 +304,7 @@ function refreshPanels(){
     fs.setValue('Offset_1',Settings.Offset[0]);
     fs.setValue('Offset_2',Settings.Offset[1]);
     fs.setValue('Offset_3',Settings.Offset[2]);
+    fs.setValue('Animation',Settings.Animation);
     for(let i=0;i<5;i++){
         setTransPanel(ts[i],(Settings.transforms)[i]);
     }
@@ -349,8 +387,10 @@ async function Main(){
 	    const fps = 1 / deltaTime;             // compute frames per second
 	    fpsElem.textContent = fps.toFixed(1);  // update fps display
 	    update(gl,tracerProgram, gameState, sceneData);
-	    render(gl,renderProgram, sceneData);
-	    requestAnimationFrame(updateAndRender);
+        render(gl,renderProgram, sceneData)
+        requestAnimationFrame(updateAndRender);
+        // for animation 
+        if(sceneData.frameCount>2 && Settings.Animation === true){sceneData.frameCount = 0;};
     }
     requestAnimationFrame(updateAndRender);
     //setInterval(()=>{update(gl,tracerProgram, gameState, sceneData); render(gl, renderProgram, sceneData); }, deltaT);
@@ -569,6 +609,8 @@ function loadShader(gl, type, source){
 //get canvas dom element and attach mouse event handelers to canvas
 function getCanvas(){
     const canvas = document.querySelector("#glCanvas");
+    //canvas.width  = window.innerWidth;
+    //canvas.height = window.innerHeight;
     function mouseEventHandler (e){
 	    var cRect = canvas.getBoundingClientRect();        // Gets CSS pos, and width/height
 	    var canvasX = Math.round(e.clientX - cRect.left);  // Subtract the 'left' of the canvas
@@ -606,7 +648,7 @@ function getCanvas(){
                 // find eye looking direction
 	    	    var eyeDir = vec4.create();
 	    	    vec3.subtract(eyeDir, gameState.eyeCenter, gameState.eyePos);
-                
+                vec3.normalize(eyeDir,eyeDir);
                 // calculate the right axis for rotation
                 var rightDir = vec3.create();
                 vec3.cross(rightDir, eyeDir, gameState.eyeUp);
