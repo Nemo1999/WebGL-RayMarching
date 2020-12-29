@@ -1,7 +1,8 @@
 # WebGL-RayMarching
 
 A fractal demo based on ray-marching
-User can chane the settings interactively
+
+Users can chane the settings interactively
 
 ## Live Demo at [https://nemo1999.github.io/WebGL-RayMarching](https://nemo1999.github.io/WebGL-RayMarching)
 
